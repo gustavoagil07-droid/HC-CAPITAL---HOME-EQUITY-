@@ -5,7 +5,7 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── AUTH ───────────────────────────────────────────────────
-const AUTH = { email: 'gustavoagil07@gmail.com', senha: '1204922alE' };
+const AUTH = { email: `gustavoagil07@gmail.com`, senha: `1204922alE` };
 
 function initAuth() {
   if (sessionStorage.getItem('hc_auth') === '1') {
