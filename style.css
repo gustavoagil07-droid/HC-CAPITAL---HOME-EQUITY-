@@ -175,6 +175,10 @@ tbody td{padding:11px 14px;vertical-align:middle}
 .login-btn{width:100%;padding:11px;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;margin-top:4px}
 .login-btn:hover:not(:disabled){background:var(--green-mid)}
 .login-btn:disabled{opacity:.6;cursor:not-allowed}
+.input-eye-wrap{position:relative;display:flex;align-items:center}
+.input-eye-wrap input{padding-right:40px}
+.eye-btn{position:absolute;right:10px;background:none;border:none;cursor:pointer;font-size:15px;line-height:1;padding:0;opacity:.5;transition:opacity .15s}
+.eye-btn:hover{opacity:1}
 
 /* LOGOUT */
 .btn-logout{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);font-family:var(--font);font-size:12px;font-weight:500;padding:5px 12px;border-radius:6px;cursor:pointer;transition:all .15s}

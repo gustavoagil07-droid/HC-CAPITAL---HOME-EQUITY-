@@ -44,6 +44,12 @@ function doLogin() {
   }
 }
 
+function toggleSenha(btn) {
+  const input = document.getElementById('l-senha');
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+
 function doLogout() {
   sessionStorage.removeItem('hc_auth');
   showLogin();

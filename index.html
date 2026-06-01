@@ -22,7 +22,10 @@
       </div>
       <div class="login-field">
         <label>Senha</label>
-        <input type="password" id="l-senha" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        <div class="input-eye-wrap">
+          <input type="password" id="l-senha" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+          <button type="button" class="eye-btn" onclick="toggleSenha(this)" tabindex="-1">👁</button>
+        </div>
       </div>
       <div class="login-error" id="login-error"></div>
       <button class="login-btn" onclick="doLogin()" id="login-btn">Entrar</button>
