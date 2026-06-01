@@ -1,6 +1,6 @@
 // ── SUPABASE CONFIG ────────────────────────────────────────
-const SUPABASE_URL  = 'COLE_SUA_URL_AQUI';
-const SUPABASE_KEY  = 'COLE_SUA_ANON_KEY_AQUI';
+const SUPABASE_URL  = 'https://gtsfqxfehictvxhggfsc.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0c2ZxeGZlaGljdHZ4aGdnZnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMTQzNzcsImV4cCI6MjA5NTg5MDM3N30.ret8SYPfEHglZJXAI5Nl6pS_y9b_OLaCyWeYQzK7M_I';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
