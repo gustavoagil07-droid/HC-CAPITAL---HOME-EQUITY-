@@ -9,80 +9,109 @@
 </head>
 <body>
 
-<header class="header">
-  <div class="h-brand">
-    <div class="h-logo">HC</div>
-    <div>
-      <div class="h-title">Pipeline de Operações — 2026</div>
-      <div class="h-sub">HC Capital · Home Equity · Gestão Interna</div>
+<!-- TELA DE LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">HC</div>
+    <div class="login-title">HC Capital</div>
+    <div class="login-sub">Pipeline de Operações · 2026</div>
+    <div class="login-form">
+      <div class="login-field">
+        <label>E-mail</label>
+        <input type="email" id="l-email" placeholder="seu@email.com" autocomplete="username">
+      </div>
+      <div class="login-field">
+        <label>Senha</label>
+        <input type="password" id="l-senha" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="login-error" id="login-error"></div>
+      <button class="login-btn" onclick="doLogin()" id="login-btn">Entrar</button>
     </div>
-  </div>
-  <div class="h-date" id="hdate"></div>
-</header>
-
-<div class="main">
-  <div class="kpi-row" id="kpis"></div>
-
-  <div class="controls">
-    <div class="sw">
-      <input class="sinput" id="q" type="text" placeholder="Buscar cliente ou banco…" oninput="render()">
-    </div>
-    <select class="sel" id="fb" onchange="render()">
-      <option value="">Todos os bancos</option>
-      <option>BANCO INTER</option>
-      <option>CREDITAS</option>
-      <option>CASHME</option>
-      <option>C6</option>
-      <option>BANCO BARI</option>
-      <option>CREDIBLUE</option>
-    </select>
-    <select class="sel" id="fs" onchange="render()">
-      <option value="">Todos os status</option>
-      <option value="doc">Análise Inicial / Documentação</option>
-      <option value="cred">Análise de Crédito</option>
-      <option value="vist">Vistoria</option>
-      <option value="neg2">Negociação Proposta</option>
-      <option value="cont">Contrato Assinado</option>
-      <option value="neg">Negadas</option>
-    </select>
-    <div class="tab-group">
-      <button class="tab-btn on" onclick="switchTab('lista',this)">Lista</button>
-      <button class="tab-btn" onclick="switchTab('pipe',this)">Pipeline</button>
-    </div>
-    <button class="btn-new" onclick="openModal(null)">+ Nova Operação</button>
-  </div>
-
-  <div class="rlabel" id="rlabel"></div>
-
-  <!-- LISTA -->
-  <div id="v-lista">
-    <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th class="th-sort" onclick="setSort('nome')">Cliente <span class="sort-icon" id="si-nome"></span></th>
-            <th>Indicado por</th>
-            <th class="th-sort" onclick="setSort('banco')">Parceiro <span class="sort-icon" id="si-banco"></span></th>
-            <th>Garantia</th>
-            <th class="th-sort" onclick="setSort('vg')">Vlr Imóvel <span class="sort-icon" id="si-vg"></span></th>
-            <th class="th-sort" onclick="setSort('vc')">Vlr Crédito <span class="sort-icon" id="si-vc"></span></th>
-            <th class="th-sort" onclick="setSort('st')">Status <span class="sort-icon" id="si-st"></span></th>
-            <th>Etapa Atual</th>
-            <th>OBS / Próximo Passo</th>
-            <th class="th-sort" onclick="setSort('updated_at')">Atualizado <span class="sort-icon" id="si-updated_at"></span></th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- PIPELINE -->
-  <div id="v-pipe" style="display:none">
-    <div class="pipe-grid" id="pboard"></div>
   </div>
 </div>
+
+<!-- DASHBOARD (oculto até login) -->
+<div id="app" style="display:none">
+
+  <header class="header">
+    <div class="h-brand">
+      <div class="h-logo">HC</div>
+      <div>
+        <div class="h-title">Pipeline de Operações — 2026</div>
+        <div class="h-sub">HC Capital · Home Equity · Gestão Interna</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="h-date" id="hdate"></div>
+      <button class="btn-logout" onclick="doLogout()" title="Sair">⏻ Sair</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="kpi-row" id="kpis"></div>
+
+    <div class="controls">
+      <div class="sw">
+        <input class="sinput" id="q" type="text" placeholder="Buscar cliente ou banco…" oninput="render()">
+      </div>
+      <select class="sel" id="fb" onchange="render()">
+        <option value="">Todos os bancos</option>
+        <option>BANCO INTER</option>
+        <option>CREDITAS</option>
+        <option>CASHME</option>
+        <option>C6</option>
+        <option>BANCO BARI</option>
+        <option>CREDIBLUE</option>
+      </select>
+      <select class="sel" id="fs" onchange="render()">
+        <option value="">Todos os status</option>
+        <option value="doc">Análise Inicial / Documentação</option>
+        <option value="cred">Análise de Crédito</option>
+        <option value="vist">Vistoria</option>
+        <option value="neg2">Negociação Proposta</option>
+        <option value="cont">Contrato Assinado</option>
+        <option value="neg">Negadas</option>
+      </select>
+      <div class="tab-group">
+        <button class="tab-btn on" onclick="switchTab('lista',this)">Lista</button>
+        <button class="tab-btn" onclick="switchTab('pipe',this)">Pipeline</button>
+      </div>
+      <button class="btn-new" onclick="openModal(null)">+ Nova Operação</button>
+    </div>
+
+    <div class="rlabel" id="rlabel"></div>
+
+    <!-- LISTA -->
+    <div id="v-lista">
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th class="th-sort" onclick="setSort('nome')">Cliente <span class="sort-icon" id="si-nome"></span></th>
+              <th>Indicado por</th>
+              <th class="th-sort" onclick="setSort('banco')">Parceiro <span class="sort-icon" id="si-banco"></span></th>
+              <th>Garantia</th>
+              <th class="th-sort" onclick="setSort('vg')">Vlr Imóvel <span class="sort-icon" id="si-vg"></span></th>
+              <th class="th-sort" onclick="setSort('vc')">Vlr Crédito <span class="sort-icon" id="si-vc"></span></th>
+              <th class="th-sort" onclick="setSort('st')">Status <span class="sort-icon" id="si-st"></span></th>
+              <th>Etapa Atual</th>
+              <th>OBS / Próximo Passo</th>
+              <th class="th-sort" onclick="setSort('updated_at')">Atualizado <span class="sort-icon" id="si-updated_at"></span></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div id="v-pipe" style="display:none">
+      <div class="pipe-grid" id="pboard"></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
 
 <!-- MODAL -->
 <div class="overlay" id="overlay" onclick="outsideClose(event)">
@@ -172,7 +201,6 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 </body>

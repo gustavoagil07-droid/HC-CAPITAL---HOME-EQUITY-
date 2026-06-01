@@ -4,6 +4,67 @@ const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ── AUTH ───────────────────────────────────────────────────
+async function initAuth() {
+  const { data: { session } } = await db.auth.getSession();
+  if (session) {
+    showApp();
+  } else {
+    showLogin();
+  }
+}
+
+function showLogin() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  setTimeout(() => document.getElementById('l-email')?.focus(), 100);
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initDashboard();
+}
+
+async function doLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const senha = document.getElementById('l-senha').value;
+  const btn   = document.getElementById('login-btn');
+  const err   = document.getElementById('login-error');
+
+  if (!email || !senha) { err.textContent = 'Preencha e-mail e senha.'; return; }
+
+  btn.textContent = 'Entrando…';
+  btn.disabled    = true;
+  err.textContent = '';
+
+  const { error } = await db.auth.signInWithPassword({ email, password: senha });
+
+  if (error) {
+    err.textContent = 'E-mail ou senha incorretos.';
+    btn.textContent = 'Entrar';
+    btn.disabled    = false;
+    return;
+  }
+
+  showApp();
+}
+
+async function doLogout() {
+  await db.auth.signOut();
+  showLogin();
+}
+
+function initDashboard() {
+  const nd = new Date();
+  document.getElementById('hdate').textContent =
+    nd.toLocaleDateString('pt-BR', {
+      weekday:'short', day:'2-digit', month:'short', year:'numeric', timeZone:'America/Sao_Paulo'
+    }).toUpperCase();
+  initBancoPills();
+  loadOps();
+}
+
 // ── BANCO MULTI-SELECT ─────────────────────────────────────
 const BANCOS = [
   { k:'BANCO INTER',  cls:'b-inter'    },
@@ -503,11 +564,4 @@ function toast(msg) {
 // ── INIT ───────────────────────────────────────────────────
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-const nd = new Date();
-document.getElementById('hdate').textContent =
-  nd.toLocaleDateString('pt-BR', {
-    weekday:'short', day:'2-digit', month:'short', year:'numeric', timeZone:'America/Sao_Paulo'
-  }).toUpperCase();
-
-initBancoPills();
-loadOps();
+initAuth();
