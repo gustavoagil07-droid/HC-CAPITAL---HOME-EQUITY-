@@ -5,9 +5,10 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── AUTH ───────────────────────────────────────────────────
-async function initAuth() {
-  const { data: { session } } = await db.auth.getSession();
-  if (session) {
+const AUTH = { email: 'gustavoagil07@gmail.com', senha: '1204922alE' };
+
+function initAuth() {
+  if (sessionStorage.getItem('hc_auth') === '1') {
     showApp();
   } else {
     showLogin();
@@ -26,32 +27,25 @@ function showApp() {
   initDashboard();
 }
 
-async function doLogin() {
+function doLogin() {
   const email = document.getElementById('l-email').value.trim();
   const senha = document.getElementById('l-senha').value;
-  const btn   = document.getElementById('login-btn');
   const err   = document.getElementById('login-error');
 
   if (!email || !senha) { err.textContent = 'Preencha e-mail e senha.'; return; }
 
-  btn.textContent = 'Entrando…';
-  btn.disabled    = true;
-  err.textContent = '';
-
-  const { error } = await db.auth.signInWithPassword({ email, password: senha });
-
-  if (error) {
+  if (email === AUTH.email && senha === AUTH.senha) {
+    sessionStorage.setItem('hc_auth', '1');
+    showApp();
+  } else {
     err.textContent = 'E-mail ou senha incorretos.';
-    btn.textContent = 'Entrar';
-    btn.disabled    = false;
-    return;
+    document.getElementById('l-senha').value = '';
+    document.getElementById('l-senha').focus();
   }
-
-  showApp();
 }
 
-async function doLogout() {
-  await db.auth.signOut();
+function doLogout() {
+  sessionStorage.removeItem('hc_auth');
   showLogin();
 }
 
