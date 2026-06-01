@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HC Capital — Pipeline 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="h-brand">
+    <div class="h-logo">HC</div>
+    <div>
+      <div class="h-title">Pipeline de Operações — 2026</div>
+      <div class="h-sub">HC Capital · Home Equity · Gestão Interna</div>
+    </div>
+  </div>
+  <div class="h-date" id="hdate"></div>
+</header>
+
+<div class="main">
+  <div class="kpi-row" id="kpis"></div>
+
+  <div class="controls">
+    <div class="sw">
+      <input class="sinput" id="q" type="text" placeholder="Buscar cliente ou banco…" oninput="render()">
+    </div>
+    <select class="sel" id="fb" onchange="render()">
+      <option value="">Todos os bancos</option>
+      <option>BANCO INTER</option>
+      <option>CREDITAS</option>
+      <option>CASHME</option>
+      <option>C6</option>
+      <option>BANCO BARI</option>
+      <option>CREDIBLUE</option>
+    </select>
+    <select class="sel" id="fs" onchange="render()">
+      <option value="">Todos os status</option>
+      <option value="doc">Análise Inicial / Documentação</option>
+      <option value="cred">Análise de Crédito</option>
+      <option value="vist">Vistoria</option>
+      <option value="neg2">Negociação Proposta</option>
+      <option value="cont">Contrato Assinado</option>
+    </select>
+    <div class="tab-group">
+      <button class="tab-btn on" onclick="switchTab('lista',this)">Lista</button>
+      <button class="tab-btn" onclick="switchTab('pipe',this)">Pipeline</button>
+    </div>
+    <button class="btn-new" onclick="openModal(null)">+ Nova Operação</button>
+  </div>
+
+  <div class="rlabel" id="rlabel"></div>
+
+  <!-- LISTA -->
+  <div id="v-lista">
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Cliente</th><th>Indicado por</th><th>Parceiro</th>
+            <th>Garantia</th><th>Vlr Imóvel</th><th>Vlr Crédito</th>
+            <th>Status</th><th>Etapa Atual</th><th>OBS / Próximo Passo</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div id="v-pipe" style="display:none">
+    <div class="pipe-grid" id="pboard"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="outsideClose(event)">
+  <div class="modal">
+    <div class="mhead">
+      <div>
+        <div class="mtitle" id="mtitle">Nova Operação</div>
+        <div class="msub" id="msub">Preencha os dados</div>
+      </div>
+      <button class="mx" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="msec">
+        <div class="msec-t">Dados do Cliente</div>
+        <div class="mgrid">
+          <div class="mf" style="grid-column:span 2">
+            <label>Nome do Cliente</label>
+            <input type="text" id="f-nome" placeholder="Nome completo">
+          </div>
+          <div class="mf">
+            <label>Indicado por</label>
+            <input type="text" id="f-ind" placeholder="Assessor">
+          </div>
+          <div class="mf">
+            <label>Tipo de Operação</label>
+            <input type="text" id="f-op" placeholder="HOME EQUITY">
+          </div>
+        </div>
+      </div>
+      <div class="msec">
+        <div class="msec-t">Garantia &amp; Crédito</div>
+        <div class="mgrid">
+          <div class="mf mf-banco" id="mf-banco-wrap">
+            <label>Parceiro / Banco <span id="banco-preview" style="font-weight:600;color:var(--green);font-size:10px;text-transform:none;letter-spacing:0"></span></label>
+            <div id="banco-pills" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px"></div>
+          </div>
+          <div class="mf">
+            <label>Tipo de Garantia</label>
+            <select id="f-gar">
+              <option value="">Selecionar…</option>
+              <option>APTO RESIDENCIAL</option><option>APTOS RESIDENCIAIS</option>
+              <option>CASA RESIDENCIAL</option><option>CASA CONDOMÍNIO</option>
+              <option>CASA COMERCIAL</option><option>CASA</option><option>TERRENO</option>
+              <option>IMÓVEL COMERCIAL</option><option>SALA COMERCIAL</option>
+              <option>SALA COMERCIAL + TERRENO</option><option>GALPÃO</option>
+              <option>GALPÕES</option><option>HOSPITAL</option><option>OUTROS</option>
+            </select>
+          </div>
+          <div class="mf">
+            <label>Valor Garantia (R$)</label>
+            <input type="number" id="f-vg" placeholder="ex: 1800000">
+          </div>
+          <div class="mf">
+            <label>Valor Crédito (R$)</label>
+            <input type="number" id="f-vc" placeholder="ex: 1000000">
+          </div>
+        </div>
+      </div>
+      <div class="msec">
+        <div class="msec-t">Status da Operação</div>
+        <div class="mgrid">
+          <div class="mf">
+            <label>Etapa Atual</label>
+            <input type="text" id="f-etapa" placeholder="Descreva a etapa…">
+          </div>
+          <div class="mf">
+            <label>Status</label>
+            <select id="f-st">
+              <option value="doc">📋 Análise Inicial / Documentação</option>
+              <option value="cred">🔍 Análise de Crédito</option>
+              <option value="vist">🏠 Vistoria</option>
+              <option value="neg2">💬 Negociação Proposta</option>
+              <option value="cont">✅ Contrato Assinado</option>
+              <option value="neg">❌ Negada</option>
+            </select>
+          </div>
+          <div class="mf" style="grid-column:span 2">
+            <label>OBS / Próximo Passo</label>
+            <textarea id="f-obs" placeholder="Observações e próximos passos…"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="bdel" id="bdel" onclick="delOp()" style="display:none">🗑 Excluir</button>
+      <button class="bcxl" onclick="closeModal()">Cancelar</button>
+      <button class="bsave" onclick="saveOp()">Salvar Operação</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+</body>
+</html>
