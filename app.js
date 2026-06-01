@@ -80,15 +80,19 @@ function migrate(st) {
 }
 
 // ── ESTADO ─────────────────────────────────────────────────
-let ops    = [];
-let editId = null;
-let view   = 'lista';
-let dragId = null;
+let ops        = [];
+let editId     = null;
+let originalSt = null;
+let view       = 'lista';
+let dragId     = null;
+let sortCol    = 'updated_at';
+let sortDir    = -1; // -1 = desc (mais recente primeiro)
 
 // ── SUPABASE: CARREGAR ─────────────────────────────────────
 async function loadOps() {
-  document.getElementById('tbody').innerHTML =
-    '<tr><td colspan="10" class="loading">Carregando operações…</td></tr>';
+  const loadingRow = '<tr><td colspan="11" class="loading">Carregando operações…</td></tr>';
+  document.getElementById('tbody').innerHTML   = loadingRow;
+  document.getElementById('pboard').innerHTML  = '<div class="loading">Carregando pipeline…</div>';
 
   const { data, error } = await db
     .from('operacoes')
@@ -110,6 +114,9 @@ async function saveOp() {
   const nome = document.getElementById('f-nome').value.toUpperCase().trim();
   if (!nome) { toast('⚠ Informe o nome do cliente'); return; }
 
+  const newSt = document.getElementById('f-st').value;
+  const today = new Date().toISOString().split('T')[0];
+
   const payload = {
     nome,
     ind:   document.getElementById('f-ind').value.trim(),
@@ -118,14 +125,20 @@ async function saveOp() {
     vg:    parseFloat(document.getElementById('f-vg').value) || 0,
     vc:    parseFloat(document.getElementById('f-vc').value) || 0,
     etapa: document.getElementById('f-etapa').value.trim(),
-    st:    document.getElementById('f-st').value,
+    st:    newSt,
     obs:   document.getElementById('f-obs').value.trim(),
   };
+
+  // Reseta contador de dias se o status mudou
+  if (newSt !== originalSt) {
+    payload.etapa_desde = today;
+  }
 
   let error;
   if (editId) {
     ({ error } = await db.from('operacoes').update(payload).eq('id', editId));
   } else {
+    payload.etapa_desde = today;
     ({ error } = await db.from('operacoes').insert(payload));
   }
 
@@ -157,7 +170,11 @@ async function delOp() {
 
 // ── SUPABASE: ATUALIZAR STATUS (drag & drop) ───────────────
 async function updateStatus(id, newSt) {
-  const { error } = await db.from('operacoes').update({ st: newSt }).eq('id', id);
+  const today = new Date().toISOString().split('T')[0];
+  const { error } = await db
+    .from('operacoes')
+    .update({ st: newSt, etapa_desde: today })
+    .eq('id', id);
   if (error) {
     toast('⚠ Erro ao mover operação');
     return false;
@@ -179,8 +196,63 @@ function bankCls(b) {
 
 function fmt(v) {
   if (!v || v <= 0) return '—';
-  if (v >= 1000000) return 'R$ ' + (v / 1000000).toFixed(1).replace('.0', '') + 'M';
-  return 'R$ ' + (v / 1000).toFixed(0) + 'k';
+  if (v >= 1000000) return 'R$ ' + (v / 1000000).toFixed(1).replace('.0', '') + 'M';
+  return 'R$ ' + (v / 1000).toFixed(0) + 'k';
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', timeZone:'UTC' });
+}
+
+function diasNaEtapa(desde) {
+  if (!desde) return null;
+  const d = new Date(desde);
+  const hoje = new Date();
+  const diff = Math.floor((hoje - d) / 86400000);
+  return diff;
+}
+
+function diasBadge(desde) {
+  const d = diasNaEtapa(desde);
+  if (d === null) return '';
+  const cls = d >= 14 ? 'dias-red' : d >= 7 ? 'dias-amber' : 'dias-ok';
+  return `<span class="dias-badge ${cls}">${d}d</span>`;
+}
+
+// ── ORDENAÇÃO ──────────────────────────────────────────────
+function setSort(col) {
+  if (sortCol === col) {
+    sortDir = sortDir * -1;
+  } else {
+    sortCol = col;
+    sortDir = col === 'updated_at' ? -1 : 1;
+  }
+  renderTable();
+}
+
+function applySortIcons() {
+  ['nome','banco','vg','vc','st','updated_at'].forEach(c => {
+    const el = document.getElementById('si-' + c);
+    if (!el) return;
+    el.textContent = sortCol === c ? (sortDir === 1 ? ' ↑' : ' ↓') : '';
+  });
+}
+
+function sortedOps(list) {
+  if (!sortCol) return list;
+  return [...list].sort((a, b) => {
+    let va = a[sortCol] ?? '';
+    let vb = b[sortCol] ?? '';
+    if (sortCol === 'vg' || sortCol === 'vc') {
+      return (va - vb) * sortDir;
+    }
+    if (sortCol === 'updated_at') {
+      return (new Date(va) - new Date(vb)) * sortDir;
+    }
+    return String(va).localeCompare(String(vb), 'pt-BR') * sortDir;
+  });
 }
 
 // ── KPIs ───────────────────────────────────────────────────
@@ -193,7 +265,7 @@ function renderKPIs() {
     { l:'Operações Ativas',  v: ativas.length, s:'excl. negadas',        kl:'var(--green)'  },
     { l:'Volume em Carteira',v: fmt(vol),       s:'crédito solicitado',   kl:'#2563eb', mono:true },
     { l:'Em Andamento',      v: andamento,      s:'aguardando ação',      kl:'#d97706'       },
-    { l:'Crédito Liberado',  v:'R$ 5,6M',  s:'capital desembolsado', kl:'#059669', mono:true },
+    { l:'Crédito Liberado',  v:'R$ 5,6M',       s:'capital desembolsado', kl:'#059669', mono:true },
     { l:'Negadas',           v: neg,            s:'não convertidas',      kl:'#dc2626'       },
   ];
   document.getElementById('kpis').innerHTML = kdata.map(k =>
@@ -206,12 +278,15 @@ function renderKPIs() {
 }
 
 // ── FILTRO ─────────────────────────────────────────────────
-function getFiltered(includeNeg) {
+function getFiltered() {
   const q  = (document.getElementById('q').value || '').toLowerCase();
   const fb = document.getElementById('fb').value;
   const fs = document.getElementById('fs').value;
+  const hasQuery = q.length > 0;
+
   return ops.filter(o => {
-    if (!includeNeg && o.st === 'neg') return false;
+    // Se não há busca ativa e não há filtro de status, exclui negadas da lista geral
+    if (!hasQuery && !fs && o.st === 'neg') return false;
     const mq = !q  || (o.nome||'').toLowerCase().includes(q) || (o.banco||'').toLowerCase().includes(q) || (o.ind||'').toLowerCase().includes(q);
     const mb = !fb || (o.banco||'').toUpperCase().includes(fb);
     const ms = !fs || o.st === fs;
@@ -221,13 +296,25 @@ function getFiltered(includeNeg) {
 
 // ── TABELA ─────────────────────────────────────────────────
 function renderTable() {
-  const rows = getFiltered(false);
-  document.getElementById('rlabel').innerHTML =
-    `Mostrando <strong>${rows.length}</strong> operaç${rows.length === 1 ? 'ão' : 'ões'} ativas`;
+  const rows = sortedOps(getFiltered());
+  const q    = (document.getElementById('q').value || '').toLowerCase();
+  const fs   = document.getElementById('fs').value;
+  const hasNeg = rows.some(o => o.st === 'neg');
+
+  let label = `Mostrando <strong>${rows.length}</strong> operaç${rows.length === 1 ? 'ão' : 'ões'}`;
+  if (hasNeg && q && !fs) label += ' <span class="label-neg">(inclui negadas)</span>';
+  document.getElementById('rlabel').innerHTML = label;
+
+  applySortIcons();
+
   document.getElementById('tbody').innerHTML = rows.length
     ? rows.map((o, i) => {
-        const st = ST[o.st] || ST.doc;
-        return `<tr onclick="openModal(${o.id})">
+        const st     = ST[o.st] || ST.doc;
+        const isNeg  = o.st === 'neg';
+        const obsHtml = o.obs
+          ? `<div class="tdobs" title="${o.obs.replace(/"/g,'&quot;')}">${o.obs}</div>`
+          : '—';
+        return `<tr onclick="openModal(${o.id})" class="${isNeg ? 'row-neg' : ''}">
           <td style="font-family:var(--mono);font-size:11px;color:var(--t3)">${String(i + 1).padStart(2, '0')}</td>
           <td><div class="tdnome">${o.nome}</div></td>
           <td><div class="tdind">${o.ind || '—'}</div></td>
@@ -237,10 +324,11 @@ function renderTable() {
           <td><div class="tdval">${fmt(o.vc)}</div></td>
           <td><span class="status ${st.cls}">${st.label}</span></td>
           <td><div class="tdetapa">${o.etapa || '—'}</div></td>
-          <td><div class="tdobs">${o.obs || '—'}</div></td>
+          <td>${obsHtml}</td>
+          <td><div class="tdval" style="font-size:11px">${fmtDate(o.updated_at)}</div></td>
         </tr>`;
       }).join('')
-    : `<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--t3)">Nenhuma operação encontrada.</td></tr>`;
+    : `<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--t3)">Nenhuma operação encontrada.</td></tr>`;
   renderKPIs();
 }
 
@@ -257,11 +345,15 @@ const STAGES = [
 function renderPipe() {
   const q  = (document.getElementById('q').value || '').toLowerCase();
   const fb = document.getElementById('fb').value;
-  const rows  = ops.filter(o => {
+  const fs = document.getElementById('fs').value;
+
+  const rows = ops.filter(o => {
     const mq = !q  || (o.nome||'').toLowerCase().includes(q) || (o.banco||'').toLowerCase().includes(q);
     const mb = !fb || (o.banco||'').toUpperCase().includes(fb);
-    return mq && mb;
+    const ms = !fs || o.st === fs;
+    return mq && mb && ms;
   });
+
   const ativas = rows.filter(o => o.st !== 'neg').length;
   const negN   = rows.filter(o => o.st === 'neg').length;
   document.getElementById('rlabel').innerHTML =
@@ -271,7 +363,7 @@ function renderPipe() {
     const cfg   = ST[s.k] || ST.doc;
     const cards = rows.filter(o => o.st === s.k);
     const isNeg = s.k === 'neg';
-    return `<div class="pipe-col">
+    return `<div class="pipe-col" style="${fs && fs !== s.k ? 'opacity:.35' : ''}">
       <div class="pipe-head" style="${isNeg ? 'background:#fef2f2' : ''}">
         <span class="pipe-head-label" style="color:${cfg.col}">${s.l.replace('\n','<br>')}</span>
         <span class="pipe-count">${cards.length}</span>
@@ -289,7 +381,10 @@ function renderPipe() {
               onclick="openModal(${o.id})">
               <div class="pipe-card-nome">${o.nome}</div>
               <div class="pipe-card-banco">${o.banco || '—'}</div>
-              <div class="pipe-card-val" style="${isNeg ? 'color:var(--t3)' : ''}">${fmt(o.vc)}</div>
+              <div class="pipe-card-bottom">
+                <span class="pipe-card-val" style="${isNeg ? 'color:var(--t3)' : ''}">${fmt(o.vc)}</span>
+                ${diasBadge(o.etapa_desde)}
+              </div>
             </div>`).join('')
           : `<div class="pipe-empty">Arraste aqui</div>`}
       </div>
@@ -322,10 +417,19 @@ async function onDrop(e, key) {
   if (dragId === null) return;
   const op = ops.find(o => o.id === dragId);
   if (op && op.st !== key) {
+    const prevSt = op.st;
+    // Atualiza localmente para feedback imediato
+    op.st = key;
+    renderPipe();
+    // Persiste no banco
     const ok = await updateStatus(dragId, key);
-    if (ok) {
-      op.st = key;
+    if (!ok) {
+      // Reverte se falhou
+      op.st = prevSt;
       renderPipe();
+      toast('⚠ Falha ao salvar — operação revertida');
+    } else {
+      op.etapa_desde = new Date().toISOString().split('T')[0];
       toast('✓ ' + op.nome + ' → ' + ST[key].label);
     }
   }
@@ -347,25 +451,33 @@ function switchTab(t, btn) {
 
 // ── MODAL ──────────────────────────────────────────────────
 function openModal(id) {
-  editId = id;
-  const o = id ? ops.find(x => x.id === id) : null;
+  editId     = id;
+  originalSt = null;
+  const o    = id ? ops.find(x => x.id === id) : null;
+
   document.getElementById('mtitle').textContent = o ? o.nome : 'Nova Operação';
-  document.getElementById('msub').textContent   = o ? `ID #${o.id} · 2026` : 'Preencha os dados abaixo';
   document.getElementById('bdel').style.display = o ? 'block' : 'none';
-  const map = { nome:'f-nome', ind:'f-ind', gar:'f-gar', vg:'f-vg', vc:'f-vc', etapa:'f-etapa', st:'f-st', obs:'f-obs' };
+
   if (o) {
+    originalSt = o.st;
+    const dias = diasNaEtapa(o.etapa_desde);
+    const upd  = fmtDate(o.updated_at);
+    let sub = `ID #${o.id} · 2026`;
+    if (upd  !== '—') sub += ` · Atualizado: ${upd}`;
+    if (dias !== null) sub += ` · ${dias} dia${dias !== 1 ? 's' : ''} nesta etapa`;
+    document.getElementById('msub').textContent = sub;
+
+    const map = { nome:'f-nome', ind:'f-ind', gar:'f-gar', vg:'f-vg', vc:'f-vc', etapa:'f-etapa', st:'f-st', obs:'f-obs' };
     Object.entries(map).forEach(([k, fid]) => {
       const el = document.getElementById(fid);
       if (el) el.value = o[k] || '';
     });
-    document.getElementById('f-op').value = o.op || 'HOME EQUITY';
     setBancoValue(o.banco || '');
   } else {
-    Object.values(map).forEach(fid => {
-      const el = document.getElementById(fid);
-      if (el) el.value = '';
-    });
-    document.getElementById('f-op').value  = 'HOME EQUITY';
+    document.getElementById('msub').textContent = 'Preencha os dados abaixo';
+    const ids = ['f-nome','f-ind','f-vg','f-vc','f-etapa','f-obs'];
+    ids.forEach(fid => { const el = document.getElementById(fid); if (el) el.value = ''; });
+    document.getElementById('f-gar').value = '';
     document.getElementById('f-st').value  = 'doc';
     setBancoValue('');
   }
@@ -374,6 +486,7 @@ function openModal(id) {
 function closeModal() {
   document.getElementById('overlay').classList.remove('open');
   editId = null;
+  originalSt = null;
 }
 function outsideClose(e) {
   if (e.target === document.getElementById('overlay')) closeModal();

@@ -43,6 +43,7 @@
       <option value="vist">Vistoria</option>
       <option value="neg2">Negociação Proposta</option>
       <option value="cont">Contrato Assinado</option>
+      <option value="neg">Negadas</option>
     </select>
     <div class="tab-group">
       <button class="tab-btn on" onclick="switchTab('lista',this)">Lista</button>
@@ -59,9 +60,17 @@
       <table>
         <thead>
           <tr>
-            <th>#</th><th>Cliente</th><th>Indicado por</th><th>Parceiro</th>
-            <th>Garantia</th><th>Vlr Imóvel</th><th>Vlr Crédito</th>
-            <th>Status</th><th>Etapa Atual</th><th>OBS / Próximo Passo</th>
+            <th>#</th>
+            <th class="th-sort" onclick="setSort('nome')">Cliente <span class="sort-icon" id="si-nome"></span></th>
+            <th>Indicado por</th>
+            <th class="th-sort" onclick="setSort('banco')">Parceiro <span class="sort-icon" id="si-banco"></span></th>
+            <th>Garantia</th>
+            <th class="th-sort" onclick="setSort('vg')">Vlr Imóvel <span class="sort-icon" id="si-vg"></span></th>
+            <th class="th-sort" onclick="setSort('vc')">Vlr Crédito <span class="sort-icon" id="si-vc"></span></th>
+            <th class="th-sort" onclick="setSort('st')">Status <span class="sort-icon" id="si-st"></span></th>
+            <th>Etapa Atual</th>
+            <th>OBS / Próximo Passo</th>
+            <th class="th-sort" onclick="setSort('updated_at')">Atualizado <span class="sort-icon" id="si-updated_at"></span></th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -93,13 +102,9 @@
             <label>Nome do Cliente</label>
             <input type="text" id="f-nome" placeholder="Nome completo">
           </div>
-          <div class="mf">
+          <div class="mf" style="grid-column:span 2">
             <label>Indicado por</label>
             <input type="text" id="f-ind" placeholder="Assessor">
-          </div>
-          <div class="mf">
-            <label>Tipo de Operação</label>
-            <input type="text" id="f-op" placeholder="HOME EQUITY">
           </div>
         </div>
       </div>
