@@ -108,19 +108,11 @@ function getBancoValue() {
 function setBancoValue(val) {
   selectedBancos = [];
   if (val) {
-    const parts = val.split(/\s*[\/,+&e]\s*/i).map(x => x.trim().toUpperCase());
+    const parts = val.split(/\s*\/\s*/).map(x => x.trim().toUpperCase());
     parts.forEach(p => {
-      const found = BANCOS.find(b =>
-        b.k.toUpperCase() === p ||
-        b.k.toUpperCase().includes(p) ||
-        p.includes(b.k.toUpperCase())
-      );
+      const found = BANCOS.find(b => b.k.toUpperCase() === p);
       if (found && !selectedBancos.includes(found.k)) selectedBancos.push(found.k);
     });
-    if (selectedBancos.length === 0) {
-      document.getElementById('banco-preview').textContent = '· ' + val;
-      return;
-    }
   }
   updateBancoPills();
 }
