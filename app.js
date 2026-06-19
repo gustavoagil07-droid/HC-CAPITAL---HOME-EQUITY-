@@ -436,7 +436,6 @@ function renderPipe() {
               <div class="pipe-card-banco">${o.banco || '—'}</div>
               <div class="pipe-card-bottom">
                 <span class="pipe-card-val" style="${isNeg ? 'color:var(--t3)' : ''}">${fmt(o.vc)}</span>
-                ${diasBadge(o.etapa_desde)}
               </div>
             </div>`).join('')
           : `<div class="pipe-empty">Arraste aqui</div>`}
