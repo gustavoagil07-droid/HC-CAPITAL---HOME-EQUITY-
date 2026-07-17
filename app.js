@@ -73,6 +73,7 @@ const BANCOS = [
   { k:'C6',           cls:'b-c6'       },
   { k:'BANCO BARI',   cls:'b-bari'     },
   { k:'CREDIBLUE',    cls:'b-crediblue'},
+  { k:'DIRETO',       cls:'b-direto'   },
 ];
 
 let selectedBancos = [];
@@ -244,6 +245,7 @@ function bankCls(b) {
   if (u === 'C6')          return 'b-c6';
   if (u === 'BANCO BARI' || u === 'BARI') return 'b-bari';
   if (u === 'CREDIBLUE')   return 'b-crediblue';
+  if (u === 'DIRETO')      return 'b-direto';
   return 'b-multi';
 }
 
